@@ -76,7 +76,6 @@ MP_LEFT     : '[';
 MP_RIGHT    : ']';
 BP_LEFT     : '{';
 BP_RIGHT    : '}';
-QUIOT       : '\'';
 
 
 /*-----------------------*/
@@ -86,6 +85,7 @@ PRINTF_FUNCT: 'printf';
 MAIN_FUNCT  : 'main';
 STD_LIB     : ('<'(.)*?'.h>');
 STRING      : ('"'(.)*?'"');
+CHAR		: ('\''.'\'');
 
 DEC_NUM : ('0' | ('1'..'9')(DIGIT)*);
 
