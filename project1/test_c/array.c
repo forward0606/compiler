@@ -10,6 +10,7 @@ int main(){
     a[0] = x;
 	char c = 'c';
 	c = ' ';
+    c = '\'';
     for(int i=1;i<10;i++){
         a[i] = a[i-1] * y;
 		printf("a[%d] = %d\n", i, a[i]);

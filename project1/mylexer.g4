@@ -85,7 +85,7 @@ PRINTF_FUNCT: 'printf';
 MAIN_FUNCT  : 'main';
 STD_LIB     : ('<'(.)*?'.h>');
 STRING      : ('"'(.)*?'"');
-CHAR		: ('\''.'\'');
+CHAR		: ('\''(.|('\\'.))'\'');
 
 DEC_NUM : ('0' | ('1'..'9')(DIGIT)*);
 
