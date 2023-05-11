@@ -1,14 +1,12 @@
-java -Xmx500M -cp ./antlr-4.12.0-complete.jar org.antlr.v4.Tool myparser.g4
-javac -cp ./antlr-4.12.0-complete.jar *.java
 java -cp ./antlr-4.12.0-complete.jar:. testParser test.c
 type: INT
 type: FLOAT
 type: INT
 declarations: 
-declarations: type Identifier ; declarations
-declarations: type Identifier ; declarations
-declarations: type Identifier ; declarations
-primaryExpr: Identifier
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -16,8 +14,9 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
-primaryExpr: Identifier
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
@@ -43,9 +42,10 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 if_then_statements: statement
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
@@ -60,9 +60,10 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 if_then_statements: statement
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 primaryExpr: Integer_constant
 signExpr: primaryExpr
@@ -74,18 +75,19 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 primaryExpr: Integer_constant
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 statements: 
 statements: statement statements
 if_then_statements: {statements}
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -93,7 +95,8 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 if_then_statements: statement
 else_statements: ELSE if_then_statements
 statement: IF '(' arith_expression ')' if_then_statements else_statements
@@ -103,7 +106,7 @@ statement: IF '(' arith_expression ')' if_then_statements else_statements
 if_then_statements: statement
 else_statements: ELSE if_then_statements
 statement: IF '(' arith_expression ')' if_then_statements else_statements
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
@@ -115,7 +118,8 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 statement: break;
 statements: 
 statements: statement statements
@@ -126,7 +130,8 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 statements: 
 statements: statement statements
 switch_statement: statements
@@ -135,7 +140,8 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 statements: 
 statements: statement statements
 switch_statement: statements
@@ -154,9 +160,9 @@ java -cp ./antlr-4.12.0-complete.jar:. testParser test2.c
 type: INT
 type: FLOAT
 declarations: 
-declarations: type Identifier ; declarations
-declarations: type Identifier ; declarations
-primaryExpr: Identifier
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -164,8 +170,9 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
-primaryExpr: Identifier
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -181,8 +188,9 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
-primaryExpr: Identifier
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -190,9 +198,10 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 if_then_statements: statement
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
@@ -203,12 +212,12 @@ multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
 statement: DO if_then_statements WHILE ( arith_expression )
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -216,7 +225,8 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 statements: 
 statements: statement statements
 if_then_statements: {statements}
@@ -226,12 +236,12 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -239,7 +249,8 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+assign_statement: '=' arith_expression
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -247,11 +258,12 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
 statements: 
 statements: statement statements
 if_then_statements: {statements}
-statement: FOR(Identifier = arith_expression ; arith_expression ; Identifier = arith_expression ) if_then_statements
+statement: FOR(variable = arith_expression ; arith_expression ; variable = arith_expression ) if_then_statements
 statements: 
 statements: statement statements
 statements: statement statements
@@ -264,10 +276,10 @@ java -cp ./antlr-4.12.0-complete.jar:. testParser test3.c
 type: INT
 type: INT
 type: INT
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
@@ -280,11 +292,15 @@ function: (VOID|type) Identifier ( type Identifier (, type Identifier)*) if_then
 type: INT
 type: FLOAT
 type: INT
+type: CHAR
+type: CHAR
 declarations: 
-declarations: type Identifier ; declarations
-declarations: type Identifier ; declarations
-declarations: type Identifier ; declarations
-primaryExpr: Identifier
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+declarations: type Identifier ; declarations ('[' Integer_constant ']')?
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 primaryExpr: Integer_constant
@@ -292,30 +308,261 @@ signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-statement: Identifier = arith_expression ;
-primaryExpr: Identifier
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '+=' arith_expression
+statement: variable assign_statement;
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '-=' arith_expression
+statement: variable assign_statement;
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '*=' arith_expression
+statement: variable assign_statement;
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '/=' arith_expression
+statement: variable assign_statement;
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '%=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: >
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: <
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: ==
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: !=
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: <=
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: >=
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+assign_statement: ++
+statement: variable assign_statement;
+assign_statement: --
+statement: variable assign_statement;
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: <
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: ++
+assign_statement: ++
+statement: variable assign_statement;
+statements: 
+statements: statement statements
+if_then_statements: {statements}
+statement: FOR(variable = arith_expression ; arith_expression ; variable = arith_expression ) if_then_statements
+primaryExpr: CHARACTER
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: CHARACTER
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: STRING
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+statement: break;
+statement: continue;
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
 statement: PRINTF ( STRING (, arith_expression)* );
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
 statement: PRINTF ( STRING (, arith_expression)* );
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
-primaryExpr: Identifier
+primaryExpr: variable
 signExpr: primaryExpr
 multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
@@ -326,8 +573,131 @@ multExpr: signExpr( '*' signExpr| '/' signExpr)*
 addExpr: multExpr( '+' multExpr| '-' multExpr)*
 arith_expression: addExpr comp addExpr
 statement: PRINTF ( STRING (, arith_expression)* );
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: >
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: (arith_expression)
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+statements: 
+statements: statement statements
+if_then_statements: {statements}
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: ==
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+primaryExpr: variable
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: >
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: ++
+statement: variable assign_statement;
+if_then_statements: statement
+statement: WHILE '(' arith_expression ')' if_then_statements
+statements: 
+statements: statement statements
+statements: statement statements
+if_then_statements: {statements}
+primaryExpr: variable
+signExpr: primaryExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+comp: ==
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+primaryExpr: variable
+signExpr: primaryExpr
+primaryExpr: Integer_constant
+signExpr: primaryExpr
+multExpr: signExpr( '*' signExpr| '/' signExpr)*
+addExpr: multExpr( '+' multExpr| '-' multExpr)*
+arith_expression: addExpr comp addExpr
+assign_statement: '=' arith_expression
+statement: variable assign_statement;
+statements: 
+statements: statement statements
+if_then_statements: {statements}
+else_statements: 
+statement: IF '(' arith_expression ')' if_then_statements else_statements
+if_then_statements: statement
+else_statements: ELSE if_then_statements
+statement: IF '(' arith_expression ')' if_then_statements else_statements
+if_then_statements: statement
+else_statements: ELSE if_then_statements
+statement: IF '(' arith_expression ')' if_then_statements else_statements
 statement: return ;
 statements: 
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
+statements: statement statements
 statements: statement statements
 statements: statement statements
 statements: statement statements

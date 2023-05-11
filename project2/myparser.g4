@@ -24,8 +24,8 @@ function: (VOID|type) Identifier '(' type Identifier (',' type Identifier)*')' i
 program:VOID MAIN '(' ')' '{' declarations statements '}'
         {if (TRACEON) System.out.println("program: VOID MAIN () {declarations statements}");};
 
-declarations: (CONST)?type Identifier ';' declarations
-             { if (TRACEON) System.out.println("declarations: type Identifier ; declarations"); }
+declarations: (CONST)?type Identifier ('[' Integer_constant ']')?';' declarations
+             { if (TRACEON) System.out.println("declarations: type Identifier ; declarations ('[' Integer_constant ']')?"); }
            | { if (TRACEON) System.out.println("declarations: ");} ;
 
 type:INT { if (TRACEON) System.out.println("type: INT"); }
@@ -63,17 +63,18 @@ signExpr: primaryExpr{if(TRACEON) System.out.println("signExpr: primaryExpr");}
 		  
 primaryExpr: Integer_constant{if(TRACEON) System.out.println("primaryExpr: Integer_constant");}
            | Floating_point_constant{if(TRACEON) System.out.println("primaryExpr: Floating_point_constant");}
-           | Identifier{if(TRACEON) System.out.println("primaryExpr: Identifier");}
+           | variable{if(TRACEON) System.out.println("primaryExpr: variable");}
            | CHARACTER{if(TRACEON) System.out.println("primaryExpr: CHARACTER");}
+           | STRING{if(TRACEON)System.out.println("primaryExpr: STRING");}
 		   | '(' arith_expression ')'{if(TRACEON) System.out.println("primaryExpr: (arith_expression)");}
            ;
 
-statement: Identifier '=' arith_expression ';'{if(TRACEON) System.out.println("statement: Identifier = arith_expression ;");}
+statement: variable assign_statement ';'{if(TRACEON) System.out.println("statement: variable assign_statement;");}
          | IF '(' arith_expression ')' if_then_statements else_statements{if(TRACEON) System.out.println("statement: IF '(' arith_expression ')' if_then_statements else_statements");}
          | WHILE '(' arith_expression ')' if_then_statements {if(TRACEON) System.out.println("statement: WHILE '(' arith_expression ')' if_then_statements");}
          | DO if_then_statements WHILE '(' arith_expression ')'{if(TRACEON) System.out.println("statement: DO if_then_statements WHILE ( arith_expression )");}
-         | FOR '('Identifier '=' arith_expression ';' arith_expression ';' Identifier '=' arith_expression ')' if_then_statements
-          {if(TRACEON) System.out.println("statement: FOR(Identifier = arith_expression ; arith_expression ; Identifier = arith_expression ) if_then_statements");}
+         | FOR '('variable '=' arith_expression ';' arith_expression ';' variable assign_statement ')' if_then_statements
+          {if(TRACEON) System.out.println("statement: FOR(variable = arith_expression ; arith_expression ; variable = arith_expression ) if_then_statements");}
          | PRINTF '(' STRING (',' arith_expression)* ')' ';'{if(TRACEON) System.out.println("statement: PRINTF ( STRING (, arith_expression)* );");}
          | RETURN (arith_expression)? ';' {if(TRACEON) System.out.println("statement: return ;");}
          | SWITCH '(' arith_expression ')' '{' switch_statements '}'{if(TRACEON) System.out.println("statement: SWITCH(arith_expression){switch_statements}");}
@@ -81,6 +82,18 @@ statement: Identifier '=' arith_expression ';'{if(TRACEON) System.out.println("s
          | CONTINUE ';'{if(TRACEON) System.out.println("statement: continue;");}
 		 ;
 
+variable: Identifier('['(variable|Integer_constant)']')?
+        ;
+
+assign_statement: '=' arith_expression{if(TRACEON) System.out.println("assign_statement: '=' arith_expression");}
+                | '+=' arith_expression{if(TRACEON) System.out.println("assign_statement: '+=' arith_expression");}
+                | '-=' arith_expression{if(TRACEON) System.out.println("assign_statement: '-=' arith_expression");}
+                | '*=' arith_expression{if(TRACEON) System.out.println("assign_statement: '*=' arith_expression");}
+                | '/=' arith_expression{if(TRACEON) System.out.println("assign_statement: '/=' arith_expression");}
+                | '%=' arith_expression{if(TRACEON) System.out.println("assign_statement: '%=' arith_expression");}
+                | '++' {if(TRACEON) System.out.println("assign_statement: ++");}
+                | '--' {if(TRACEON) System.out.println("assign_statement: --");}
+                ;
 
 if_then_statements: statement{if(TRACEON) System.out.println("if_then_statements: statement");}
                   | '{' statements '}'{if(TRACEON) System.out.println("if_then_statements: {statements}");}

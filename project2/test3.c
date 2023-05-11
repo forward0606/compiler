@@ -10,11 +10,52 @@ void main()
 	int a;
 	float b;
 	const int c;
-	a = b+1;
+	char d;
+	char string[50];
 
-	
+	a = b+1;
+	a = b - 2;
+	a = b * 2;
+	a = b / 2;
+	a = b % 2;
+
+	a += 2;
+	a -= 4;
+	a *= 5;
+	a /= 5;
+	a %= 10;
+
+	a = (a > b);
+	a = (a < b);
+	a = (a == b);
+	a = (a != b);
+	a = (a <= b);
+	a = (a >= b);
+	a++;
+	b--;
+	for(a = 0;a<10;a++){
+		b++;
+	}
+
+	d = 'c';
+	d = string[0];
+	string[1] = 'f';
+	string = "hello world!";
+	break;
+	continue;
 	printf("%d", a);
 	printf("%d%lf", a, b);
 	printf("%d%lf", a, b, 5);
+	if (a > 0){
+		a = (2+4)-3;
+	}
+	else if(b == 3){
+		b = 2;
+		while(b>0)b++;
+	}
+	else if(a % 2 == 0){
+		b = a % 4;
+	}
+
 	return ;
 }
