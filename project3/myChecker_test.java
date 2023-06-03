@@ -10,6 +10,10 @@ public class myChecker_test {
             CommonTokenStream tokens = new CommonTokenStream(lexer);
 
             myCheckerParser parser = new myCheckerParser(tokens);
-            parser.program();
+            parser.headers();
+            System.out.println("symbol table:\tkey\ttype number");
+            for (String i : parser.symtab.keySet()) {
+                  System.out.println("\t\t" + i + "\t" + parser.symtab.get(i));
+            }
       }
 } 

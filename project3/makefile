@@ -6,6 +6,8 @@ myChecker.java: myChecker.g4
 
 run: myChecker_test.class test.c
 	java -cp ./antlr-4.12.0-complete.jar:. myChecker_test test.c
+	java -cp ./antlr-4.12.0-complete.jar:. myChecker_test test2.c
+	java -cp ./antlr-4.12.0-complete.jar:. myChecker_test test3.c
 
 clean:
 	rm -rf *.class
