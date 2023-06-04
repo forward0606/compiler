@@ -97,7 +97,7 @@ options {
         }
     }
     
-    int add_global_format_string(String s)
+    int add_global_string(String s)
     {
       String t = new String();
       int len = 1;
@@ -226,10 +226,22 @@ statement: assign_stmt ';'
          ;
 
 printf_stmt: 'printf''(' STRING_LITERAL ')'{
-                int len = add_global_format_string($STRING_LITERAL.text);
+                int len = add_global_string($STRING_LITERAL.text);
                 //%1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @str, i64 0, i64 0))
                 TextCode.add("%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0))");
                 varCount += 1;
+            }
+            | 'printf''(' STRING_LITERAL ',' arith_expression ')'{
+               int len = add_global_string($STRING_LITERAL.text);
+               Info para = $arith_expression.theInfo;
+               //(theLHS.theType == Type.INT)
+               if(para.theType == Type.INT){
+                  //theRHS.theVar.varIndex
+                  TextCode.add("%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0), i32 %t" + para.theVar.varIndex + ")");
+               }else if(para.theType == Type.CONST_INT){
+                  TextCode.add("%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0), i32 " + para.theVar.iValue + ")");
+               }
+               varCount += 1;
             }
         ;
 
@@ -262,23 +274,23 @@ block_stmt: '{' statements '}'
 
 
 assign_stmt: Identifier '=' arith_expression
-             {
-                Info theRHS = $arith_expression.theInfo;
-				Info theLHS = symtab.get($Identifier.text); 
+            {
+               Info theRHS = $arith_expression.theInfo;
+				   Info theLHS = symtab.get($Identifier.text); 
+               System.out.println(";" + $Identifier.text + ": type = " + theLHS.theType + ", value = " + theLHS.theVar.iValue);
+               System.out.println(";" + "arith_expression : type = " + theRHS.theType + ", value = " + theRHS.theVar.varIndex);
 		   
-                if ((theLHS.theType == Type.INT) &&
-                    (theRHS.theType == Type.INT)) {		   
-                   // issue store insruction.
-                   // Ex: store i32 \%tx, i32* \%ty
-                   TextCode.add("store i32 %t" + theRHS.theVar.varIndex + ", i32* %t" + theLHS.theVar.varIndex);
-				} else if ((theLHS.theType == Type.INT) &&
-				    (theRHS.theType == Type.CONST_INT)) {
-                   // issue store insruction.
-                   // Ex: store i32 value, i32* \%ty
-                   TextCode.add("store i32 " + theRHS.theVar.iValue + ", i32* %t" + theLHS.theVar.varIndex);				
-				}
-			 }
-             ;
+               if ((theLHS.theType == Type.INT) && (theRHS.theType == Type.INT)) {		   
+                  // issue store insruction.
+                  // Ex: store i32 \%tx, i32* \%ty
+                  TextCode.add("store i32 %t" + theRHS.theVar.varIndex + ", i32* %t" + theLHS.theVar.varIndex);
+				   } else if ((theLHS.theType == Type.INT) && (theRHS.theType == Type.CONST_INT)) {
+                  // issue store insruction.
+                  // Ex: store i32 value, i32* \%ty
+                  TextCode.add("store i32 " + theRHS.theVar.iValue + ", i32* %t" + theLHS.theVar.varIndex);				
+				   } 
+			   }
+            ;
 
 		   
 func_no_return_stmt: Identifier '(' argument ')'
@@ -300,31 +312,73 @@ arith_expression
 returns [Info theInfo]
 @init {$theInfo = new Info();}
                 : a=multExpr { $theInfo=$a.theInfo; }
-                 ( '+' b=multExpr
-                    {
-                       // We need to do type checking first.
-                       // ...
-					  
-                       // code generation.					   
-                       if (($a.theInfo.theType == Type.INT) &&
-                           ($b.theInfo.theType == Type.INT)) {
-                           TextCode.add("%t" + varCount + " = add nsw i32 %t" + $theInfo.theVar.varIndex + ", %t" + $b.theInfo.theVar.varIndex);
-					   
-					       // Update arith_expression's theInfo.
-					       $theInfo.theType = Type.INT;
-					       $theInfo.theVar.varIndex = varCount;
-					       varCount ++;
-                       } else if (($a.theInfo.theType == Type.INT) &&
-					       ($b.theInfo.theType == Type.CONST_INT)) {
-                           TextCode.add("%t" + varCount + " = add nsw i32 %t" + $theInfo.theVar.varIndex + ", " + $b.theInfo.theVar.iValue);
-					   
-					       // Update arith_expression's theInfo.
-					       $theInfo.theType = Type.INT;
-					       $theInfo.theVar.varIndex = varCount;
-					       varCount ++;
-                       }
-                    }
-                 | '-' multExpr
+                 ( c='+' b=multExpr
+                  {
+                     // We need to do type checking first.
+                     if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
+                        System.out.println("Error! " + $c.getLine() + ": the type of operator + is incorrent!");
+                        $theInfo.theType = Type.ERR;
+                     }
+                     if($b.theInfo.theType != Type.INT && $b.theInfo.theType != Type.CONST_INT){
+                        System.out.println("Error! " + $c.getLine() + ": the type of operator + is incorrent!");
+                        $theInfo.theType = Type.ERR;
+                     }
+                     // code generation.
+
+                     if (($a.theInfo.theType == Type.INT) && ($b.theInfo.theType == Type.INT)) {
+                        TextCode.add("%t" + varCount + " = add nsw i32 %t" + $theInfo.theVar.varIndex + ", %t" + $b.theInfo.theVar.varIndex);   
+                        // Update arith_expression's theInfo.
+                        $theInfo.theType = Type.INT;
+                        $theInfo.theVar.varIndex = varCount;
+                        varCount++;
+                     } else if (($a.theInfo.theType == Type.INT) && ($b.theInfo.theType == Type.CONST_INT)) {
+                        TextCode.add("%t" + varCount + " = add nsw i32 %t" + $theInfo.theVar.varIndex + ", " + $b.theInfo.theVar.iValue);
+                        $theInfo.theType = Type.INT;
+                        $theInfo.theVar.varIndex = varCount;
+                        varCount++;
+                     } else if (($a.theInfo.theType == Type.CONST_INT) && ($b.theInfo.theType == Type.INT)) {
+                        TextCode.add("%t" + varCount + " = add nsw i32 " + $theInfo.theVar.iValue + ", " + $b.theInfo.theVar.varIndex);
+                        $theInfo.theType = Type.INT;
+                        $theInfo.theVar.varIndex = varCount;
+                        varCount++;
+                     }else if(($a.theInfo.theType == Type.CONST_INT) && ($b.theInfo.theType == Type.CONST_INT)) {
+                        $theInfo.theType = Type.CONST_INT;
+                        $theInfo.theVar.iValue += $b.theInfo.theVar.iValue;
+                     }
+                  }
+                 | c='-' b=multExpr{
+                     // We need to do type checking first.
+                     if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
+                        System.out.println("Error! " + $c.getLine() + ": the type of operator - is incorrent!");
+                        $theInfo.theType = Type.ERR;
+                     }
+                     if($b.theInfo.theType != Type.INT && $b.theInfo.theType != Type.CONST_INT){
+                        System.out.println("Error! " + $c.getLine() + ": the type of operator - is incorrent!");
+                        $theInfo.theType = Type.ERR;
+                     }
+                     // code generation.
+
+                     if (($a.theInfo.theType == Type.INT) && ($b.theInfo.theType == Type.INT)) {
+                        TextCode.add("%t" + varCount + " = sub nsw i32 %t" + $theInfo.theVar.varIndex + ", %t" + $b.theInfo.theVar.varIndex);   
+                        // Update arith_expression's theInfo.
+                        $theInfo.theType = Type.INT;
+                        $theInfo.theVar.varIndex = varCount;
+                        varCount++;
+                     } else if (($a.theInfo.theType == Type.INT) && ($b.theInfo.theType == Type.CONST_INT)) {
+                        TextCode.add("%t" + varCount + " = sub nsw i32 %t" + $theInfo.theVar.varIndex + ", " + $b.theInfo.theVar.iValue);
+                        $theInfo.theType = Type.INT;
+                        $theInfo.theVar.varIndex = varCount;
+                        varCount++;
+                     } else if (($a.theInfo.theType == Type.CONST_INT) && ($b.theInfo.theType == Type.INT)) {
+                        TextCode.add("%t" + varCount + " = sub nsw i32 " + $theInfo.theVar.iValue + ", " + $b.theInfo.theVar.varIndex);
+                        $theInfo.theType = Type.INT;
+                        $theInfo.theVar.varIndex = varCount;
+                        varCount++;
+                     }else if(($a.theInfo.theType == Type.CONST_INT) && ($b.theInfo.theType == Type.CONST_INT)) {
+                        $theInfo.theType = Type.CONST_INT;
+                        $theInfo.theVar.iValue -= $b.theInfo.theVar.iValue;
+                     }
+                  }
                  )*
                  ;
 
@@ -332,59 +386,133 @@ multExpr
 returns [Info theInfo]
 @init {$theInfo = new Info();}
           : a=signExpr { $theInfo=$a.theInfo; }
-          ( '*' signExpr
-          | '/' signExpr
+          ( c='*' b=signExpr{
+            //type check
+            if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
+               System.out.println("Error! " + $c.getLine() + ": the type of operator * is incorrent!");
+               $theInfo.theType = Type.ERR;
+            }
+            if($b.theInfo.theType != Type.INT && $b.theInfo.theType != Type.CONST_INT){
+               System.out.println("Error! " + $c.getLine() + ": the type of operator * is incorrent!");
+               $theInfo.theType = Type.ERR;
+            }
+            if($a.theInfo.theType == Type.INT && $b.theInfo.theType == Type.INT){
+               TextCode.add("%t"+varCount+" = mul i32 %t" + $a.theInfo.theVar.varIndex + ", %t" + $b.theInfo.theVar.varIndex);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else if($a.theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.INT){
+               TextCode.add("%t"+varCount+" = mul i32 " + $a.theInfo.theVar.iValue + ", %t" + $b.theInfo.theVar.varIndex);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else if($a.theInfo.theType == Type.INT && $b.theInfo.theType == Type.CONST_INT){
+               TextCode.add("%t"+varCount+" = mul i32 %t" + $a.theInfo.theVar.varIndex + ", " + $b.theInfo.theVar.iValue);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else if($a.theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.CONST_INT){
+               $theInfo.theType = Type.CONST_INT;
+               $theInfo.theVar.iValue = $a.theInfo.theVar.iValue * $b.theInfo.theVar.iValue;
+            }
+          }
+          | c='/' b=signExpr{
+            //type check
+            if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
+               System.out.println("Error! " + $c.getLine() + ": the type of operator / is incorrent!");
+               $theInfo.theType = Type.ERR;
+            }
+            if($b.theInfo.theType != Type.INT && $b.theInfo.theType != Type.CONST_INT){
+               System.out.println("Error! " + $c.getLine() + ": the type of operator / is incorrent!");
+               $theInfo.theType = Type.ERR;
+            }
+            if($a.theInfo.theType == Type.INT && $b.theInfo.theType == Type.INT){
+               TextCode.add("%t"+varCount+" = sdiv i32 %t" + $a.theInfo.theVar.varIndex + ", %t" + $b.theInfo.theVar.varIndex);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else if($a.theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.INT){
+               TextCode.add("%t"+varCount+" = sdiv i32 " + $a.theInfo.theVar.iValue + ", %t" + $b.theInfo.theVar.varIndex);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else if($a.theInfo.theType == Type.INT && $b.theInfo.theType == Type.CONST_INT){
+               TextCode.add("%t"+varCount+" = sdiv i32 %t" + $a.theInfo.theVar.varIndex + ", " + $b.theInfo.theVar.iValue);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else if($a.theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.CONST_INT){
+               TextCode.add("%t"+varCount+" = sdiv i32 " + $a.theInfo.theVar.iValue + ", " + $b.theInfo.theVar.iValue);
+               $theInfo.theType = Type.INT;
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }
+          }
 	  )*
 	  ;
 
 signExpr
 returns [Info theInfo]
 @init {$theInfo = new Info();}
-        : a=primaryExpr { $theInfo=$a.theInfo; } 
-        | '-' primaryExpr
+         : a=primaryExpr { $theInfo=$a.theInfo; } 
+         | c='-' a=primaryExpr{
+            $theInfo=$a.theInfo;
+            //type check
+            if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
+               System.out.println("Error! " + $c.getLine() + ": the type of operator * is incorrent!");
+               $theInfo.theType = Type.ERR;
+            }
+            if($a.theInfo.theType == Type.INT){
+               TextCode.add("%t"+varCount+" = mul i32 %t" + $a.theInfo.theVar.varIndex + ", -1");
+               $theInfo.theVar.varIndex = varCount;
+               varCount++;
+            }else{
+               System.out.println(";$theInfo.theVar.iValue = " + $theInfo.theVar.iValue);
+               $theInfo.theVar.iValue *= -1;
+            }
+         }
 	;
 		  
 primaryExpr
 returns [Info theInfo]
 @init {$theInfo = new Info();}
-           : Integer_constant
-	     {
-            $theInfo.theType = Type.CONST_INT;
-			$theInfo.theVar.iValue = Integer.parseInt($Integer_constant.text);
-         }
+           : Integer_constant{
+               $theInfo.theType = Type.CONST_INT;
+			      $theInfo.theVar.iValue = Integer.parseInt($Integer_constant.text);
+            }
            | Floating_point_constant
-           | Identifier
-              {
-                // get type information from symtab.
-                Type the_type = symtab.get($Identifier.text).theType;
-				$theInfo.theType = the_type;
+           | Identifier{
+               // get type information from symtab.
+               Type the_type = symtab.get($Identifier.text).theType;
+               $theInfo.theType = the_type;
 
-                // get variable index from symtab.
-                int vIndex = symtab.get($Identifier.text).theVar.varIndex;
-				
-                switch (the_type) {
-                case INT: 
-                         // get a new temporary variable and
-						 // load the variable into the temporary variable.
-                         
-						 // Ex: \%tx = load i32, i32* \%ty.
-						 TextCode.add("%t" + varCount + "=load i32, i32* %t" + vIndex);
-				         
-						 // Now, Identifier's value is at the temporary variable \%t[varCount].
-						 // Therefore, update it.
-						 $theInfo.theVar.varIndex = varCount;
-						 varCount ++;
-                         break;
-                case FLOAT:
-                         break;
-                case CHAR:
-                         break;
-			
-                }
-              }
-	   | '&' Identifier
-	   | '(' arith_expression ')'
-           ;
+               // get variable index from symtab.
+               int vIndex = symtab.get($Identifier.text).theVar.varIndex;
+         
+               switch (the_type) {
+               case INT: 
+                  // get a new temporary variable and
+                  // load the variable into the temporary variable.
+                        
+                  // Ex: \%tx = load i32, i32* \%ty.
+                  TextCode.add("%t" + varCount + "=load i32, i32* %t" + vIndex);
+                  
+                  // Now, Identifier's value is at the temporary variable \%t[varCount].
+                  // Therefore, update it.
+                  $theInfo.theVar.varIndex = varCount;
+                  varCount ++;
+                   break;
+               case FLOAT:
+                  break;
+               case CHAR:
+                  break;
+               }
+            }
+	         | '&' Identifier
+	         | '(' arith_expression ')'{
+               $theInfo = $arith_expression.theInfo;
+            }
+            ;
 
 		   
 /* description of the tokens */
