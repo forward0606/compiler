@@ -305,7 +305,59 @@ arg: arith_expression
    ;
 		   
 cond_expression
-               : arith_expression (RelationOP arith_expression)*
+returns [Info theInfo]
+@init {$theInfo = new Info();}
+               : a=arith_expression{
+                  $theInfo = $a.theInfo;
+               }
+               (RelationOP b=arith_expression{
+                  if($theInfo.theType != Type.INT && $theInfo.theType != Type.CONST_INT){
+                     $theInfo.theType = Type.ERR;
+                  }
+                  if($b.theInfo.theType != Type.INT && $b.theInfo.theType != Type.CONST_INT){
+                     $theInfo.theType = Type.ERR;
+                  }
+                  //RelationOP: '>' |'>=' | '<' | '<=' | '==' | '!=';
+                  String op="";
+                  switch ($RelationOP.text) {
+                  case ">":
+                     op = "sgt";
+                     break; 
+                  case ">=":
+                     op = "sge";
+                     break;
+                  case "<":
+                     op = "slt";
+                     break;
+                  case "<=":
+                     op = "sle";
+                     break;
+                  case "==":
+                     op = "eq";
+                     break;
+                  case "!=":
+                     op = "ne";
+                     break;
+                  }
+                  if(op == ""){
+                     $theInfo.theType = Type.ERR;
+                  }else{
+                     String code = "%t"+varCount+" = "+"icmp "+ op + " i32 ";
+                     if($theInfo.theType == Type.INT && $b.theInfo.theType == Type.INT){
+                        TextCode.add(code+"%t"+$theInfo.theVar.varIndex+", %t"+$b.theInfo.theVar.varIndex);
+                        varCount++;
+                     }else if($theInfo.theType == Type.INT && $b.theInfo.theType == Type.CONST_INT){
+                        TextCode.add(code+"%t"+$theInfo.theVar.varIndex+", "+$b.theInfo.theVar.iValue);
+                        varCount++;
+                     }else if($theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.INT){
+                        TextCode.add(code+$theInfo.theVar.iValue+", %t"+$b.theInfo.theVar.varIndex);
+                        varCount++;
+                     }else if($theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.CONST_INT){
+                        TextCode.add(code+$theInfo.theVar.iValue+", %t"+$b.theInfo.theVar.iValue);
+                        varCount++;
+                     }
+                  }
+               })*
                ;
 			   
 arith_expression
