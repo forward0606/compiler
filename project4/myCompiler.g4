@@ -143,19 +143,16 @@ options {
    }
 }
 
-program: VOID MAIN '(' ')'
-         {
+program: VOID MAIN '(' ')'{
             /* Output function prologue */
             prologue();
             TextCode.add("define dso_local i32 @main()");
             TextCode.add("{");
          }
-
         '{' 
             declarations
             statements
-        '}'
-         {
+        '}'{
 	         if (TRACEON)
 	            System.out.println("VOID MAIN () {declarations statements}");
 
@@ -165,8 +162,7 @@ program: VOID MAIN '(' ')'
          ;
 
 
-declarations: type Identifier ';' declarations
-        {
+declarations: type Identifier ';' declarations{
             if (TRACEON)
                System.out.println("declarations: type Identifier : declarations");
 
@@ -188,26 +184,25 @@ declarations: type Identifier ';' declarations
             if ($type.attr_type == Type.INT) { 
                TextCode.add("%t" + the_entry.theVar.varIndex + " = alloca i32, align 4");
             }
-        }
-        | 
-        {
+         }
+         |{
             if (TRACEON)
                System.out.println("declarations: ");
-        }
-        ;
+         }
+         ;
 
 
 type
 returns [Type attr_type]
-    : INT { if (TRACEON) System.out.println("type: INT"); $attr_type=Type.INT; }
-    | CHAR { if (TRACEON) System.out.println("type: CHAR"); $attr_type=Type.CHAR; }
-    | FLOAT {if (TRACEON) System.out.println("type: FLOAT"); $attr_type=Type.FLOAT; }
-	;
+      : INT { if (TRACEON) System.out.println("type: INT"); $attr_type=Type.INT; }
+      | CHAR { if (TRACEON) System.out.println("type: CHAR"); $attr_type=Type.CHAR; }
+      | FLOAT {if (TRACEON) System.out.println("type: FLOAT"); $attr_type=Type.FLOAT; }
+      ;
 
 
-statements:statement statements
-          |
-          ;
+statements: statement statements
+            |
+            ;
 
 
 statement: assign_stmt ';'
@@ -235,38 +230,55 @@ printf_stmt: 'printf''(' STRING_LITERAL ')'{
                }
                varCount += 1;
             }
-        ;
+         ;
 
 for_stmt: FOR '(' assign_stmt ';'
                   cond_expression ';'
                   assign_stmt
               ')'
                   block_stmt
-        ;
+         ;
 		 
 		 
 if_stmt
-            : if_then_stmt if_else_stmt
-            ;
+      : if_then_stmt{
+         String endLabel = newLabel();
+         TextCode.add("br label %" + endLabel);
+         TextCode.add($if_then_stmt.falseLabel+":");
+      } if_else_stmt{
+         TextCode.add("br label %" + endLabel);
+         TextCode.add(endLabel+":");
+      }
+      ;
 
 	   
 if_then_stmt
-            : IF '(' cond_expression ')' block_stmt
+returns [String falseLabel]
+@init {$falseLabel = new String();}
+            : IF '(' cond_expression ')'{
+               String iftrue = newLabel();
+               $falseLabel = newLabel();
+               if($cond_expression.theInfo.theType == Type.INT){
+                  TextCode.add("br i1 %t" + $cond_expression.theInfo.theVar.varIndex+", label %" + iftrue + ", label %"+$falseLabel);
+               }
+               TextCode.add(iftrue+":");
+            } block_stmt
             ;
 
 
 if_else_stmt
-            : ELSE block_stmt
+            : ELSE block_stmt{
+               TextCode.add("; if_else_stmt -> ELSE block_stmt");
+            }
             |
             ;
 
 				  
 block_stmt: '{' statements '}'
-	  ;
+	   ;
 
 
-assign_stmt: Identifier '=' arith_expression
-            {
+assign_stmt: Identifier '=' arith_expression {
                Info theRHS = $arith_expression.theInfo;
 				   Info theLHS = symtab.get($Identifier.text); 
                System.out.println(";" + $Identifier.text + ": type = " + theLHS.theType + ", value = " + theLHS.theVar.iValue);
@@ -348,20 +360,20 @@ returns [Info theInfo]
                         $theInfo.theVar.varIndex = varCount;
                         varCount++;
                      }else if($theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.CONST_INT){
-                        TextCode.add(code+$theInfo.theVar.iValue+", %t"+$b.theInfo.theVar.iValue);
+                        TextCode.add(code+$theInfo.theVar.iValue+", "+$b.theInfo.theVar.iValue);
+                        $theInfo.theType = Type.INT;
                         $theInfo.theVar.varIndex = varCount;
                         varCount++;
                      }
                   }
-               })*
+               })
                ;
 			   
 arith_expression
 returns [Info theInfo]
 @init {$theInfo = new Info();}
-                : a=multExpr { $theInfo=$a.theInfo; }
-                 ( c='+' b=multExpr
-                  {
+               : a=multExpr { $theInfo=$a.theInfo; }
+                  ( c='+' b=multExpr{
                      // We need to do type checking first.
                      if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
                         System.out.println("Error! " + $c.getLine() + ": the type of operator + is incorrent!");
@@ -394,7 +406,7 @@ returns [Info theInfo]
                         $theInfo.theVar.iValue += $b.theInfo.theVar.iValue;
                      }
                   }
-                 | c='-' b=multExpr{
+                  | c='-' b=multExpr{
                      // We need to do type checking first.
                      if($a.theInfo.theType != Type.INT && $a.theInfo.theType != Type.CONST_INT){
                         System.out.println("Error! " + $c.getLine() + ": the type of operator - is incorrent!");
@@ -427,8 +439,8 @@ returns [Info theInfo]
                         $theInfo.theVar.iValue -= $b.theInfo.theVar.iValue;
                      }
                   }
-                 )*
-                 ;
+               )*
+               ;
 
 multExpr
 returns [Info theInfo]
@@ -549,7 +561,7 @@ returns [Info theInfo]
                   // Therefore, update it.
                   $theInfo.theVar.varIndex = varCount;
                   varCount ++;
-                   break;
+                  break;
                case FLOAT:
                   break;
                case CHAR:
@@ -581,8 +593,8 @@ Integer_constant:'0'..'9'+;
 Floating_point_constant:'0'..'9'+ '.' '0'..'9'+;
 
 STRING_LITERAL
-    :  '"' ( EscapeSequence | ~('\\'|'"') )* '"'
-    ;
+   :  '"' ( EscapeSequence | ~('\\'|'"') )* '"'
+   ;
 
 // WS:( ' ' | '\t' | '\r' | '\n' ) -> channel(HIDDEN);
 // COMMENT:'/*' .* '*/' -> channel(HIDDEN);
@@ -591,5 +603,5 @@ COMMENT:('/*' (.)*? '*/'|'//'(.)*?'\n') -> channel(HIDDEN);
 
 fragment
 EscapeSequence
-    :   '\\' ('b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\')
-    ;
+   :   '\\' ('b'|'t'|'n'|'f'|'r'|'"'|'\''|'\\')
+   ;
