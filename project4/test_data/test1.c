@@ -5,10 +5,10 @@ void main(){
     a = -2;
     b = 6;
     c = b / a;
-    // if(a > b > c){
-    //     printf("a > b\n");
-    // }
-    printf("a > b == %d\n", a>b);
+    if(a > b > c){
+        printf("a > b\n");
+    }
+    printf("a > b\n");
     // c = 35 / b + 3;
     // c = 4 * b / 5 + 3;
     // a = -a + b;

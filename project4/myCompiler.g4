@@ -5,40 +5,40 @@ options {
 }
 
 @header {
-    // import packages here.
-    import java.util.HashMap;
-    import java.util.ArrayList;
-    import java.util.List;
+   // import packages here.
+   import java.util.HashMap;
+   import java.util.ArrayList;
+   import java.util.List;
 }
 
 @members {
-    boolean TRACEON = false;
+   boolean TRACEON = false;
 
-    // Type information.
-    public enum Type{
-       ERR, BOOL, INT, FLOAT, CHAR, CONST_INT;
-    }
+   // Type information.
+   public enum Type{
+      ERR, BOOL, INT, FLOAT, CHAR, CONST_INT;
+   }
 
-    // This structure is used to record the information of a variable or a constant.
-    class tVar {
-	   int   varIndex; // temporary variable's index. Ex: t1, t2, ..., etc.
-	   int   iValue;   // value of constant integer. Ex: 123.
-	   float fValue;   // value of constant floating point. Ex: 2.314.
+   // This structure is used to record the information of a variable or a constant.
+   class tVar {
+      int   varIndex; // temporary variable's index. Ex: t1, t2, ..., etc.
+      int   iValue;   // value of constant integer. Ex: 123.
+      float fValue;   // value of constant floating point. Ex: 2.314.
 	};
 
-    class Info {
-       Type theType;  // type information.
-       tVar theVar;
-	   
-	   Info() {
-          theType = Type.ERR;
-		  theVar = new tVar();
-	   }
-    };
+   class Info {
+      Type theType;  // type information.
+      tVar theVar;
+   
+      Info() {
+         theType = Type.ERR;
+         theVar = new tVar();
+      }
+   };
 
 	
-    // ============================================
-    // Create a symbol table.
+   // ============================================
+   // Create a symbol table.
 	// ArrayList is easy to extend to add more info. into symbol table.
 	//
 	// The structure of symbol table:
@@ -47,58 +47,53 @@ options {
 	//    - varIndex: the variable's index, ex: t1, t2, ...
 	//    - iValue: value of integer constant.
 	//    - fValue: value of floating-point constant.
-    // ============================================
+   // ============================================
 
-    HashMap<String, Info> symtab = new HashMap<String, Info>();
+   HashMap<String, Info> symtab = new HashMap<String, Info>();
 
-    // labelCount is used to represent temporary label.
-    // The first index is 0.
-    int labelCount = 0;
-	
-    // varCount is used to represent temporary variables.
-    // The first index is 0.
-    int varCount = 0;
-    int strCount = 0;
+   // labelCount is used to represent temporary label.
+   // The first index is 0.
+   int labelCount = 0;
 
-    // Record all assembly instructions.
-    List<String> GlobalCode = new ArrayList<String>();
-    List<String> TextCode = new ArrayList<String>();
-    List<String> Code = new ArrayList<String>();
+   // varCount is used to represent temporary variables.
+   // The first index is 0.
+   int varCount = 0;
+   int strCount = 0;
+
+   // Record all assembly instructions.
+   List<String> GlobalCode = new ArrayList<String>();
+   List<String> TextCode = new ArrayList<String>();
+   List<String> Code = new ArrayList<String>();
 
 
     /*
      * Output prologue.
      */
-    void prologue()
-    {
+   void prologue(){
       GlobalCode.add("; === prologue ====");
       GlobalCode.add("declare dso_local i32 @printf(i8*, ...)");
-    }
+   }
     
 	
     /*
      * Output epilogue.
      */
-    void epilogue()
-    {
-        /* handle epilogue */
-        TextCode.add("\n; === epilogue ===");
-	    TextCode.add("ret i32 0");
-        TextCode.add("}");
-        
-        for (int i=0; i < GlobalCode.size(); i++)
-        {
-            Code.add(GlobalCode.get(i));
-        }
-        Code.add("\n");
-        for (int i=0; i < TextCode.size(); i++)
-        {
-            Code.add(TextCode.get(i));
-        }
-    }
+   void epilogue(){
+      /* handle epilogue */
+      TextCode.add("\n; === epilogue ===");
+      TextCode.add("ret i32 0");
+      TextCode.add("}");
+      
+      for (int i=0; i < GlobalCode.size(); i++){
+         Code.add(GlobalCode.get(i));
+      }
+      Code.add("\n");
+      for (int i=0; i < TextCode.size(); i++){
+         Code.add(TextCode.get(i));
+      }
+   }
     
-    int add_global_string(String s)
-    {
+   int add_global_string(String s){
       String t = new String();
       int len = 1;
       for(int i=1;i<s.length()-1;i++){
@@ -132,75 +127,72 @@ options {
       GlobalCode.add("@str" + strCount + " = private unnamed_addr constant [" + len + " x i8] c\"" + t +"\"");
       strCount += 1;
       return len;
-    }
+   }
 
 
-    /* Generate a new label */
-    String newLabel()
-    {
-       labelCount ++;
-       return (new String("L")) + Integer.toString(labelCount);
-    } 
+   /* Generate a new label */
+   String newLabel(){
+         labelCount ++;
+         return (new String("L")) + Integer.toString(labelCount);
+   } 
     
     
-    public List<String> getTextCode()
-    {
-       return Code;
-    }
+   public List<String> getTextCode()
+   {
+      return Code;
+   }
 }
 
 program: VOID MAIN '(' ')'
-        {
-           /* Output function prologue */
-           prologue();
-           TextCode.add("define dso_local i32 @main()");
-           TextCode.add("{");
-        }
+         {
+            /* Output function prologue */
+            prologue();
+            TextCode.add("define dso_local i32 @main()");
+            TextCode.add("{");
+         }
 
         '{' 
-           declarations
-           statements
+            declarations
+            statements
         '}'
-        {
-	   if (TRACEON)
-	      System.out.println("VOID MAIN () {declarations statements}");
+         {
+	         if (TRACEON)
+	            System.out.println("VOID MAIN () {declarations statements}");
 
-           /* output function epilogue */	  
-           epilogue();
-        }
-        ;
+            /* output function epilogue */	  
+            epilogue();
+         }
+         ;
 
 
 declarations: type Identifier ';' declarations
         {
-           if (TRACEON)
-              System.out.println("declarations: type Identifier : declarations");
+            if (TRACEON)
+               System.out.println("declarations: type Identifier : declarations");
 
-           if (symtab.containsKey($Identifier.text)) {
-              // variable re-declared.
-              System.out.println("Type Error: " + 
-                                  $Identifier.getLine() + 
-                                 ": Redeclared identifier.");
-              System.exit(0);
-           }
+            if (symtab.containsKey($Identifier.text)) {
+               // variable re-declared.
+               System.out.println("Type Error: " + $Identifier.getLine() + ": Redeclared identifier.");
+               System.exit(0);
+            }
                  
-           /* Add ID and its info into the symbol table. */
-	       Info the_entry = new Info();
-		   the_entry.theType = $type.attr_type;
-		   the_entry.theVar.varIndex = varCount;
-		   varCount ++;
-		   symtab.put($Identifier.text, the_entry);
+            /* Add ID and its info into the symbol table. */
+            Info the_entry = new Info();
+            the_entry.theType = $type.attr_type;
+            the_entry.theVar.varIndex = varCount;
+            varCount ++;
+            symtab.put($Identifier.text, the_entry);
 
-           // issue the instruction.
-		   // Ex: \%a = alloca i32, align 4
-           if ($type.attr_type == Type.INT) { 
-              TextCode.add("%t" + the_entry.theVar.varIndex + " = alloca i32, align 4");
-           }
+            // issue the instruction.
+            // Ex: \%a = alloca i32, align 4
+            if ($type.attr_type == Type.INT) { 
+               TextCode.add("%t" + the_entry.theVar.varIndex + " = alloca i32, align 4");
+            }
         }
         | 
         {
-           if (TRACEON)
-              System.out.println("declarations: ");
+            if (TRACEON)
+               System.out.println("declarations: ");
         }
         ;
 
@@ -345,15 +337,19 @@ returns [Info theInfo]
                      String code = "%t"+varCount+" = "+"icmp "+ op + " i32 ";
                      if($theInfo.theType == Type.INT && $b.theInfo.theType == Type.INT){
                         TextCode.add(code+"%t"+$theInfo.theVar.varIndex+", %t"+$b.theInfo.theVar.varIndex);
+                        $theInfo.theVar.varIndex = varCount;
                         varCount++;
                      }else if($theInfo.theType == Type.INT && $b.theInfo.theType == Type.CONST_INT){
                         TextCode.add(code+"%t"+$theInfo.theVar.varIndex+", "+$b.theInfo.theVar.iValue);
+                        $theInfo.theVar.varIndex = varCount;
                         varCount++;
                      }else if($theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.INT){
                         TextCode.add(code+$theInfo.theVar.iValue+", %t"+$b.theInfo.theVar.varIndex);
+                        $theInfo.theVar.varIndex = varCount;
                         varCount++;
                      }else if($theInfo.theType == Type.CONST_INT && $b.theInfo.theType == Type.CONST_INT){
                         TextCode.add(code+$theInfo.theVar.iValue+", %t"+$b.theInfo.theVar.iValue);
+                        $theInfo.theVar.varIndex = varCount;
                         varCount++;
                      }
                   }
