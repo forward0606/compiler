@@ -210,35 +210,69 @@ statement: assign_stmt ';'
          | func_no_return_stmt ';'
          | for_stmt
          | printf_stmt ';'
+         | while_stmt ';'
          ;
 
-printf_stmt: 'printf''(' STRING_LITERAL ')'{
-                int len = add_global_string($STRING_LITERAL.text);
-                //%1 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([13 x i8], [13 x i8]* @str, i64 0, i64 0))
-                TextCode.add("%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0))");
-                varCount += 1;
-            }
-            | 'printf''(' STRING_LITERAL ',' arith_expression ')'{
+printf_stmt:'printf''(' STRING_LITERAL{
                int len = add_global_string($STRING_LITERAL.text);
+               String text_code = "%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0)";
+               varCount += 1;
+
+            } (',' arith_expression {
                Info para = $arith_expression.theInfo;
-               //(theLHS.theType == Type.INT)
                if(para.theType == Type.INT){
                   //theRHS.theVar.varIndex
-                  TextCode.add("%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0), i32 %t" + para.theVar.varIndex + ")");
+                  text_code += ", i32 %t" + para.theVar.varIndex;
                }else if(para.theType == Type.CONST_INT){
-                  TextCode.add("%t" + varCount + " = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([" + len + " x i8], [" +  len + " x i8]* @str" + (strCount-1) + ", i64 0, i64 0), i32 " + para.theVar.iValue + ")");
+                  text_code += ", i32 " + para.theVar.iValue;
                }
-               varCount += 1;
+            })* ')'{
+                  text_code += ")";
+                  System.out.println(";"+text_code);
+                  TextCode.add(text_code);
             }
          ;
 
-for_stmt: FOR '(' assign_stmt ';'
-                  cond_expression ';'
-                  assign_stmt
+for_stmt: FOR '(' assign_stmt{
+                  String backLabel = newLabel();
+                  TextCode.add("br label %" + backLabel);
+                  TextCode.add(backLabel + ":");
+               } ';'cond_expression{
+                  String iftrue = newLabel();
+                  String falseLabel = newLabel();
+                  if($cond_expression.theInfo.theType == Type.INT){
+                     TextCode.add("br i1 %t" + $cond_expression.theInfo.theVar.varIndex+", label %" + iftrue + ", label %" + falseLabel);
+                  }
+                  String back = newLabel();
+                  TextCode.add(back+":");
+               }';' assign_stmt{
+                  TextCode.add("br label %"+backLabel);
+                  TextCode.add(iftrue+":");
+               }
               ')'
-                  block_stmt
+                  block_stmt{
+                  TextCode.add("br label %" + back);
+                  TextCode.add(falseLabel+":");
+               }
          ;
-		 
+
+while_stmt: 
+            'while'{
+               String backLabel = newLabel();
+               TextCode.add("br label %" + backLabel);
+               TextCode.add(backLabel + ":");
+            } '(' cond_expression{
+               String iftrue = newLabel();
+               String falseLabel = newLabel();
+               if($cond_expression.theInfo.theType == Type.INT){
+                  TextCode.add("br i1 %t" + $cond_expression.theInfo.theVar.varIndex+", label %" + iftrue + ", label %" + falseLabel);
+               }
+               TextCode.add(iftrue+":");
+            }')'block_stmt{
+               TextCode.add("br label %" + backLabel);
+               TextCode.add(falseLabel+":");
+            }
+            ;
 		 
 if_stmt
       : if_then_stmt{
