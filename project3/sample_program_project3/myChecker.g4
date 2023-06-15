@@ -34,7 +34,7 @@ program
 
 declarations
 	: type Identifier ';' declarations
-     {
+    {
 	   if (TRACEON) System.out.println("declarations: type Identifier : declarations");
 	 
   	   if (symtab.containsKey($Identifier.text)) {
@@ -45,7 +45,7 @@ declarations
 		   /* Add ID and its attr_type into the symbol table. */
 		   symtab.put($Identifier.text, $type.attr_type);	   
 	   }
-	 }
+	}
 	| { if (TRACEON) System.out.println("declarations: "); }
 	;
 
@@ -111,9 +111,8 @@ statement returns [int attr_type]
 	   }
 		
 	   if ($attr_type != $arith_expression.attr_type) {
-           System.out.println("Error! " + 
-				              $arith_expression.start.getLine() +
-						      ": Type mismatch for the two silde operands in an assignment statement.");
+           System.out.println("Error! " + $arith_expression.start.getLine() + 
+		   					  ": Type mismatch for the two silde operands in an assignment statement.");
 		   $attr_type = -2;
        }
 	 }
